@@ -24,6 +24,7 @@ typedef unsigned int stdelement;
 struct node {
   node_pointer parent;
   short number_of_elements;
+  short number_of_children;
   stdelement elements[MAXNODE];
   node_pointer children[MAXNODE + 1];
 };
