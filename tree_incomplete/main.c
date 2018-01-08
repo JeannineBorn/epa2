@@ -6,7 +6,7 @@ void simple_insert(node_pointer node, stdelement element) {
 	int size = node->number_of_elements;
 	int buffer_element;
 	for(int i = 0; i < size; i++) {
-		if(node->elements[i] == NULL) {
+		if(node->elements[i] == (int) NULL) {
 			node->elements[i] = element;
 		}
 		if(element < node->elements[i]) {
@@ -27,34 +27,40 @@ int middle_element(node_pointer node, stdelement element) {
 		}
 		else {
 			middle = node->elements[ORDER -1];
-			node->elements[ORDER -1] = NULL;
+			node->elements[ORDER -1] = (int) NULL;
 			simple_insert(node, element);
 			return middle;
 		}
 	}
 	middle = node->elements[ORDER];
-	node->elements[ORDER] = NULL;
+	node->elements[ORDER] = (int) NULL;
 	simple_insert(node, element);
 	return middle;
 }
 
 
-void split(node_pointer node, stdelement element, int middle) {
+void split(node_pointer node, int middle) {
 	struct node node_r;
-	node_r.parent = node->parent;
+	struct node node_l;
+	node_r.parent = node;
+	node_l.parent = node;
 	for(int i = ORDER; i < MAXNODE; i++){
 		node_r.elements[i - ORDER] = node->elements[i];
-		node->elements[i] = NULL;
+		node_l.elements[i - ORDER] = node->elements[i - ORDER];
+		node->elements[i] = (int) NULL;
+		node->elements[i-ORDER] = (int) NULL;
 		node_r.number_of_elements++;
-		node->number_of_elements--;
+		node_l.number_of_elements++;
+		node->number_of_elements -= 2;
 	}
+	simple_insert(node, middle);
 }
 
 
 void insert_child(node_pointer parent, node_pointer child) {
 	int size = MAXNODE +1;
 	int childcount = parent->number_of_children;
-	if(childcount < MAXNODE + 1){
+	if(childcount < size){
 		parent->children[childcount-1] = child;
 		parent->number_of_children++;
 		return;
@@ -104,12 +110,12 @@ void insert_into_node(node_pointer node, stdelement element) {
 		if(node->parent->children[MAXNODE] != NULL) {
 			// not the simple split
 			insert_into_node(node->parent, middle);
-			split(node, element, middle);
+			split(node, middle);
 			insert_child(node->parent, node);
 			return;
 		}
 		else{
-			split(node, element, middle);
+			split(node, middle);
 			insert_child(node->parent, node);
 		}
 	}
@@ -141,10 +147,7 @@ bool insert_element(stdelement element, btree tree){
 
 int main(void){
 
-	char a = 'X';
-	printf("%s", a);
-
-	printf("hello zis is jeannine");
+	int ret;
 
 	struct node node2;
 	node2.parent = NULL;
@@ -171,6 +174,8 @@ int main(void){
 	node1.children[2] = &node2;
 	node1.children[3] = NULL;
 	node1.children[4] = NULL;
+
+	node2.parent = &node1;
 
 	btree tree = create_btree();
 	tree->root = &node1;
@@ -212,12 +217,9 @@ int main(void){
 
 	free(tree);
 
-	ret = assert_equals_file("render_node_to_svg_reference1.svg", "render_node_to_svg_test1.test.svg", 1024);
+	//ret = assert_equals_file("render_node_to_svg_reference1.svg", "render_node_to_svg_test1.test.svg", 1024);
 
 	return ret;
-	}
-
-	printf("Hello");
 
 }
 
