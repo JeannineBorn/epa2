@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "btree/btree.h"
+#include "test/test.h"
 
 void simple_insert(node_pointer node, stdelement element) {
 	int size = node->number_of_elements;
@@ -139,10 +140,85 @@ bool insert_element(stdelement element, btree tree){
 
 
 int main(void){
-  /*insert your code below*/
-    btree tree = create_btree();
 
-  return EXIT_SUCCESS;
+	char a = 'X';
+	printf("%s", a);
+
+	printf("hello zis is jeannine");
+
+	struct node node2;
+	node2.parent = NULL;
+	node2.number_of_elements = 4;
+	node2.elements[0] = 2;
+	node2.elements[1] = 3;
+	node2.elements[2] = 4;
+	node2.elements[3] = 5;
+	node2.children[0] = NULL;
+	node2.children[1] = NULL;
+	node2.children[2] = NULL;
+	node2.children[3] = NULL;
+	node2.children[4] = NULL;
+
+	struct node node1;
+	node1.parent = NULL;
+	node1.number_of_elements = 4;
+	node1.elements[0] = 0;
+	node1.elements[1] = 1;
+	node1.elements[2] = 8;
+	node1.elements[3] = 9;
+	node1.children[0] = NULL;
+	node1.children[1] = NULL;
+	node1.children[2] = &node2;
+	node1.children[3] = NULL;
+	node1.children[4] = NULL;
+
+	btree tree = create_btree();
+	tree->root = &node1;
+
+	int depth = get_btree_depth(tree);
+	int width = svg_get_width(depth);
+	int height = svg_get_height(depth);
+
+	puts("render_node_to_svg_test1()");
+
+	FILE* fd = fopen("render_node_to_svg_test1.test.svg", "w");
+	if(fd == NULL) {
+		fprintf(stderr, "Error: Couldn't open file!\n");
+		return EXIT_FAILURE;
+	}
+
+	ret = svg_save_header(fd, width, height);
+	if(ret != EXIT_SUCCESS) {
+		fprintf(stderr, "Error: Couldn't save file!\n");
+		fclose(fd);
+		return EXIT_FAILURE;
+	}
+
+	ret = render_node_to_svg(fd, tree->root, 20, 30);
+	if(ret != EXIT_SUCCESS) {
+		fprintf(stderr, "Error: Couldn't save file!\n");
+		fclose(fd);
+		return EXIT_FAILURE;
+	}
+
+	ret = svg_save_footer(fd);
+	if(ret != EXIT_SUCCESS) {
+		fprintf(stderr, "Error: Couldn't save file!\n");
+		fclose(fd);
+		return EXIT_FAILURE;
+	}
+
+	fclose(fd);
+
+	free(tree);
+
+	ret = assert_equals_file("render_node_to_svg_reference1.svg", "render_node_to_svg_test1.test.svg", 1024);
+
+	return ret;
+	}
+
+	printf("Hello");
+
 }
 
 
