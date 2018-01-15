@@ -146,7 +146,6 @@ bool insert_element(stdelement element, btree tree){
 
 
 int main(void){
-
 	int ret;
 
 	struct node node2;
@@ -162,20 +161,35 @@ int main(void){
 	node2.children[3] = NULL;
 	node2.children[4] = NULL;
 
+	struct node node3;
+	node3.parent = NULL;
+	node3.number_of_elements = 4;
+	node3.elements[0] = 1;
+	node3.elements[1] = 0;
+	node3.elements[2] = 1;
+	node3.elements[3] = 0;
+	node3.children[0] = NULL;
+	node3.children[1] = NULL;
+	node3.children[2] = NULL;
+	node3.children[3] = NULL;
+	node3.children[4] = NULL;
+
 	struct node node1;
 	node1.parent = NULL;
 	node1.number_of_elements = 4;
+	node1.number_of_children = 2;
 	node1.elements[0] = 0;
 	node1.elements[1] = 1;
 	node1.elements[2] = 8;
 	node1.elements[3] = 9;
-	node1.children[0] = NULL;
-	node1.children[1] = NULL;
-	node1.children[2] = &node2;
+	node1.children[0] = &node3;
+	node1.children[1] = &node2;
+	node1.children[2] = NULL;
 	node1.children[3] = NULL;
 	node1.children[4] = NULL;
 
 	node2.parent = &node1;
+	node3.parent = &node1;
 
 	btree tree = create_btree();
 	tree->root = &node1;
@@ -186,34 +200,37 @@ int main(void){
 
 	puts("render_node_to_svg_test1()");
 
-	FILE* fd = fopen("render_node_to_svg_test1.test.svg", "w");
-	if(fd == NULL) {
-		fprintf(stderr, "Error: Couldn't open file!\n");
-		return EXIT_FAILURE;
-	}
+	save_btree("render_node_to_svg_test1.tree.svg", tree);
 
-	ret = svg_save_header(fd, width, height);
-	if(ret != EXIT_SUCCESS) {
-		fprintf(stderr, "Error: Couldn't save file!\n");
-		fclose(fd);
-		return EXIT_FAILURE;
-	}
 
-	ret = render_node_to_svg(fd, tree->root, 20, 30);
-	if(ret != EXIT_SUCCESS) {
-		fprintf(stderr, "Error: Couldn't save file!\n");
-		fclose(fd);
-		return EXIT_FAILURE;
-	}
+	// FILE* fd = fopen("render_node_to_svg_test1.test.svg", "w");
+	// if(fd == NULL) {
+	// 	fprintf(stderr, "Error: Couldn't open file!\n");
+	// 	return EXIT_FAILURE;
+	// }
 
-	ret = svg_save_footer(fd);
-	if(ret != EXIT_SUCCESS) {
-		fprintf(stderr, "Error: Couldn't save file!\n");
-		fclose(fd);
-		return EXIT_FAILURE;
-	}
+	// ret = svg_save_header(fd, width, height);
+	// if(ret != EXIT_SUCCESS) {
+	// 	fprintf(stderr, "Error: Couldn't save file!\n");
+	// 	fclose(fd);
+	// 	return EXIT_FAILURE;
+	// }
 
-	fclose(fd);
+	// ret = render_node_to_svg(fd, tree->root, 20, 30);
+	// if(ret != EXIT_SUCCESS) {
+	// 	fprintf(stderr, "Error: Couldn't save file!\n");
+	// 	fclose(fd);
+	// 	return EXIT_FAILURE;
+	// }
+
+	// ret = svg_save_footer(fd);
+	// if(ret != EXIT_SUCCESS) {
+	// 	fprintf(stderr, "Error: Couldn't save file!\n");
+	// 	fclose(fd);
+	// 	return EXIT_FAILURE;
+	// }
+
+	// fclose(fd);
 
 	free(tree);
 
