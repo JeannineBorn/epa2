@@ -144,6 +144,60 @@ bool insert_element(stdelement element, btree tree){
 	return success;
 }
 
+void delete (node_pointer node, stdelement element){
+	if(node.number_of_children == 0){
+		delete_leaf(node, element)
+	}
+	else {
+
+		element =
+		delete_leaf()
+	}
+}
+
+void delete_leaf(node_pointer node, stdelement element){
+	for(int i = 0; i < node.number_of_elements; i++){
+		if(node.elements[i] == element){
+			node.elements = NULL;
+			node.number_of_elements --;
+		}
+	if(node.number_of_elements < 2){
+		parent_node = node.parent; // um herauszufinden ob der rechte oder linke Knoten mehr als d Elemente hat müssen wir erstmal die Position unseres node in dem childrenarray finden
+		for(int i = 0; i < parent_node.number_of_children; i++){
+			if(parent_node.children[i] == node){
+				int dividing_element = i;
+				left_node = parent_node.children[i - 1];
+				right_node = parent_node.children[i + 1];
+			}
+		}
+		// nun kommt das checken ob left_node oder right_node mehr als d elemente hat. Annahme d=2
+		if(left_node.number_of_elements > 2){
+			insert_into_node(node, left_node.elements[left_node.number_of_elements -1]);
+			left_node.elements[left_node.number_of_elements -1] = NULL;
+			left_node.number_of_elements --; // das letzte Element vom linken Knoten wurde node beigefügt
+		}
+		else if (right_node.number_of_elements > 2){
+			insert_into_node(node, right_node.elements[right_node.number_of_elements -1]);
+			right_node.elements[right_node.number_of_elements -1] = NULL;
+			right_node.number_of_elements --; // das letzte Element vom rechten Knoten wurde node beigefügt
+		}
+		// weder left noch right hat mehr als d elemente
+		else{
+			for(int i = 0; i < node.number_of_elements; i++){
+				insert_into_node(rigt_node, node.elements[i]); // ich habe mich entschieden in diesem Fall den Knoten immer mit dem rechten zu verschmelzen
+				node.elements[i] = NULL;
+				node.number_of_elements --;
+			}
+			insert_into_node(right_node, dividing_element); // "übernimm das trennende Element s des Vaters v in diesen Knoten"
+			node.parent[dividing_element] = NULL; // leeren Knoten abgehängt
+			delete_leaf(parent_node, dividing_element);
+		}
+	}
+	}
+
+
+
+}
 
 int main(void){
 	int ret;
