@@ -3,21 +3,27 @@
 #include "test/test.h"
 
 void simple_insert(node_pointer node, stdelement element) {
+	printf("simple_insert\n");
 	int size = node->number_of_elements;
 	int buffer_element;
+	printf("size: %d", size);
 	if(size < 2 * ORDER){
 		for(int i = 0; i < size; i++) {
+			printf("s_iter: %d\n", i);
 			if(node->elements[i] == (int) NULL) {
+				printf("s_found\n");
 				node->elements[i] = element;
 				node->number_of_elements++;
 				return;
 			}
 			if(element < node->elements[i]) {
+				printf("s_swapped\n");
 				buffer_element = node->elements[i];
 				node->elements[i] = element;
 				element = buffer_element;
 			}
 		}
+		printf("s_last\n");
 		node->elements[size] = element;
 		node->number_of_elements++;
 	}
@@ -25,6 +31,7 @@ void simple_insert(node_pointer node, stdelement element) {
 
 
 int middle_element(node_pointer node, stdelement element) {
+	printf("middle_element\n");
 	int middle;
 	if(element < node->elements[ORDER]) {
 		if(element > node->elements[ORDER - 1]) {
@@ -45,6 +52,7 @@ int middle_element(node_pointer node, stdelement element) {
 
 
 void insert_child(node_pointer parent, node_pointer child) {
+	printf("insert_child\n");
 	int size = MAXNODE +1;
 	int childcount = parent->number_of_children;
 	int amount_p_elements = parent->number_of_elements;
@@ -70,14 +78,19 @@ void insert_child(node_pointer parent, node_pointer child) {
 
 
 void split(node_pointer node, stdelement middle) {
-	node_pointer rig = malloc(sizeof(struct node));
-
+	printf("split\n");
+	 //printf("s: %d", (sizeof(struct node)));
+	 //printf(malloc((sizeof(struct node))));
+	malloc((sizeof(struct node)));
+	int node_size = sizeof(struct node);
+	node_pointer rig = malloc(node_size);
 	for(int i = 0; i < MAXNODE; i++){
 		rig->elements[i] = NULL;
 	}
 	rig->number_of_elements = 0;
 	rig->number_of_children = 0;
 	
+
 	for(int i = ORDER; i < MAXNODE; i++) {
 		simple_insert(rig, node->elements[i]);
 
@@ -90,86 +103,33 @@ void split(node_pointer node, stdelement middle) {
 }
 
 
-bool findkey2(stdelement element, node_pointer current_node){
+bool findkey(stdelement element, node_pointer *current_node){
+	printf("findkey\n");
 	bool success = false;
-	node_pointer p = current_node;
-	//struct node current_node = malloc(sizeof(struct node));
-	while (!success && (p != NULL)){
-		// current_node = p;
-		int size_array = (sizeof(current_node->elements)) / (sizeof(int));
-		printf("%i\n", size_array);
-		for(int i = 0; i < size_array; i++) {
-			if (current_node->elements[i] == element) {
-				success = true;
-			}
-			else if(current_node->elements[i] > element) {
-				p = current_node->children[i];
-				continue;
-			}
-		}
-		p = current_node->children[MAXNODE];
-		current_node = p;
-	}
-	return success;
-}
-
-
-bool findkey3(stdelement element, node_pointer current_node){
-	bool success = false;
-	node_pointer target = current_node;
-	int size_array = target->number_of_elements;
-	printf("size is: %d\n", size_array);
-	while(!success && (target != NULL)){
-		for(int i = 0; i < size_array; i++) {
-			if(target->elements[i] == element) {
-				current_node = target;
-				return !success;
-			}
-			if(element < target->elements[i]) {
-				success = findkey3(element, target->children[i]);
-				printf("child no.: %d\n", i);
-				return success;
-			}
-		}
-		success = findkey3(element, target->children[size_array]);
-	}
-	return success;
-}
-
-bool findkey(stdelement element, node_pointer current_node){
-	bool success = false;
-	node_pointer target = current_node;
+	// printf("elem: %d\n", element);
+	// printf("elems-> %d\n", current_node->elements[0]);
+	node_pointer target = *current_node;
 	int size_array = target->number_of_elements;
 	// printf("array size: %d\n", size_array);
-		while(!success && (target != NULL)){
-			for(int i = 0; i < size_array; i++) {
-				if(element <= target->elements[i]) {
-					// printf("node: %s\n", target);
-					// printf("elem in array: %d\n",target->elements[i] );
-					// printf("element: %d\n", element);
-					if(element == target->elements[i]){
-						current_node = target;
-						printf("found: %d\n", current_node->elements[0]);
-						success = true;
-						break;
-					}
-					if(!success) {
-						current_node = target->children[i];
-						printf("node: %d\n", current_node->elements[0]);
-						success = findkey(element, current_node);
-						break;
-
-					}
-				}
+	for(int i = 0; i < size_array; i++) {
+		if(element >= target->elements[i]) {
+			// printf("elem in array: %d\n",target->elements[i] );
+			// printf("element: %d\n", element);
+			// printf("check %d\n", (element == target->elements[i]));
+			if(element == target->elements[i]) {
+				*current_node = target;
+				printf("found_n: %p\n", *current_node);
+				return success = true;
 			}
-		/* TODO:
-		 *	gibt den falschen current node an
-		 * richtiger currentnode wird nicht abgespeichert
-		*/
-		// current_node = target->children[size_array];
-		// return success = findkey(element, current_node);
+		}
+		else {
+			*current_node = target->children[i];
+			// printf("found_n: %d\n", current_node);
+			return success = findkey(element, current_node);	
+		}
 	}
-	// printf("current nodes elem %d\n", current_node->elements[0]);
+	printf("found_n_: %p\n", *current_node);
+	printf("success: %d", success);
 	return success;
 }
 
@@ -187,6 +147,7 @@ bool contains(node_pointer node, stdelement element) {
 
 
 bool empty(node_pointer node) {
+	printf("empty\n");
 	if(node->number_of_elements == 0) {
 		return true;
 	}
@@ -195,7 +156,11 @@ bool empty(node_pointer node) {
 
 
 void insert_into_node(node_pointer current, stdelement element) {
+	printf("insert_into_node\n");
+	printf("current_e: %d\n", current->number_of_elements);
+	printf("i_node: %p\n", current);
 	if(current->number_of_elements < MAXNODE) {
+	printf("insert_into_node_simple_i\n");
 		simple_insert(current, element);
 		return;
 	}
@@ -204,9 +169,10 @@ void insert_into_node(node_pointer current, stdelement element) {
 
 
 bool insert_element(stdelement element, btree tree){
+	printf("insert_element\n");
 	node_pointer current_node = tree->root;
 
-	bool success = !findkey(element, current_node);
+	bool success = !findkey(element, &current_node);
 	if(success) {
 		if (!empty(tree->root)){
 			insert_into_node(current_node, element);
@@ -299,7 +265,7 @@ int main(void){
 	node3.parent = NULL;
 	node3.number_of_elements = 2;
 	node3.elements[0] = 8;
-	node3.elements[1] = 9;
+	node3.elements[1] = 10;
 	node3.elements[2] = NULL;
 	node3.elements[3] = NULL;
 	node3.children[0] = NULL;
@@ -323,12 +289,12 @@ int main(void){
 
 	struct node node1;
 	node1.parent = NULL;
-	node1.number_of_elements = 3;
+	node1.number_of_elements = 4;
 	node1.number_of_children = 2;
-	node1.elements[0] = 5;
-	node1.elements[1] = 7;
-	node1.elements[2] = 10;
-	node1.elements[3] = NULL;
+	node1.elements[0] = 2;
+	node1.elements[1] = 4;
+	node1.elements[2] = 18;
+	node1.elements[3] = 29;
 	node1.children[0] = &node2;
 	node1.children[1] = NULL;
 	node1.children[2] = &node3;
@@ -342,28 +308,38 @@ int main(void){
 	tree->root = &node1;
 
 	stdelement test_e = 35;
-	stdelement elem0 = 1;
+	stdelement elem0 = 12;
+	stdelement elem1 = 13;
+	stdelement elem2 = 14;
 
 	node_pointer np = &node1;
 	node_pointer ch = &node4;
+	node_pointer n3 = &node3;
 
-	insert_child(np, ch);
 
-	split(ch, test_e);
+	printf("node1: %p\n", np);
+	printf("node2: %p\n", &node2);
+	printf("node3: %p\n", n3);
 
-	node_pointer noder = np->children[4];
+	// insert_child(np, ch);
 
-	node_pointer curr = np;
+	// simple_insert(n3, 9);
 
-	node_pointer x = NULL;
+	// split(ch, test_e);
 
-	// printf("%s", x);
+	// node_pointer noder = np->children[4];
 
-	findkey(elem0, np);
+	// node_pointer curr = np;
 
-	printf("%d\n", curr->elements[0]);
+	// findkey(elem0, np);
 
-	// insert_element(elem0, tree);
+	// printf("%d\n", curr->elements[0]);
+
+	insert_element(elem0, tree);
+	insert_element(elem1, tree);
+	insert_element(elem2, tree);
+
+	printf("done");
 
 
 	int depth = get_btree_depth(tree);
