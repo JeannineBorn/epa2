@@ -397,7 +397,7 @@ int main(void){
 	int width = svg_get_width(depth);
 	int height = svg_get_height(depth);
 
-	save_btree("render_node_to_svg_test1.tree.svg", tree);
+	save_btree("b_tree.svg", tree);
 
 	free(tree);
 
