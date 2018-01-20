@@ -29,7 +29,7 @@ void simple_insert(node_pointer node, stdelement element) {
 	}
 }
 
-
+//READY
 int middle_element(node_pointer node, stdelement element) {
 	printf("middle_element\n");
 	int middle;
@@ -39,13 +39,18 @@ int middle_element(node_pointer node, stdelement element) {
 		}
 		else {
 			middle = node->elements[ORDER -1];
-			node->elements[ORDER -1] = (int) NULL;
+			node->elements[ORDER -1] = node->elements[ORDER];
+			node->elements[ORDER] = node->elements[ORDER + 1];
+			node->elements[ORDER + 1] = NULL;
+			node->number_of_elements--;
 			simple_insert(node, element);
 			return middle;
 		}
 	}
 	middle = node->elements[ORDER];
-	node->elements[ORDER] = (int) NULL;
+	node->elements[ORDER] = node->elements[ORDER + 1];
+	node->elements[ORDER+ 1] = (int) NULL;
+	node->number_of_elements--;
 	simple_insert(node, element);
 	return middle;
 }
@@ -76,9 +81,9 @@ void insert_child(node_pointer parent, node_pointer child) {
 	}
 }
 
-void insert_into_node(node_pointer, stdelement, btree);
+void insert_into_node(node_pointer, stdelement, btree*);
 
-void split2(node_pointer node, stdelement middle, btree tree) {
+void split2(node_pointer node, stdelement middle, btree *tree_pointer) {
 	printf("split\n");
 	 //printf("s: %d", (sizeof(struct node)));
 	 //printf(malloc((sizeof(struct node))));
@@ -101,8 +106,8 @@ void split2(node_pointer node, stdelement middle, btree tree) {
 
 	//TODO: childs umhängen
 	//TODO: not done yet!!!!
-	node_pointer root_new = tree->root;
-	node_pointer root_old = tree->root;
+	node_pointer root_new = (*tree_pointer)->root;
+	node_pointer root_old = (*tree_pointer)->root;
 
 	if(node->parent == NULL){
 		// neuen root erstellen
@@ -114,10 +119,10 @@ void split2(node_pointer node, stdelement middle, btree tree) {
 			root_new->elements[i] = NULL;
 			root_new->children[i] = NULL;
 		}
-		tree->root = root_new;
+		(*tree_pointer)->root = root_new;
 	}
 
-	insert_into_node(root_new, middle, tree);
+	insert_into_node(root_new, middle, tree_pointer);
 	insert_child(root_new, rig);
 	insert_child(root_new, root_old);
 }
@@ -174,18 +179,6 @@ bool findkey(stdelement element, node_pointer *current_node){
 }
 
 
-bool contains(node_pointer node, stdelement element) {
-	bool success = false;
-	int size = node->number_of_elements;
-	for(int i = 0; i < size; i++) {
-		if(node->elements[i] == element) {
-			return !success;
-		}
-	}
-	return success;
-}
-
-
 bool empty(node_pointer node) {
 	printf("empty\n");
 	if(node->number_of_elements == 0) {
@@ -195,7 +188,7 @@ bool empty(node_pointer node) {
 }
 
 
-void insert_into_node(node_pointer current, stdelement element, btree tree) {
+void insert_into_node(node_pointer current, stdelement element, btree *tree_pointer) {
 	printf("insert_into_node\n");
 	printf("current_e: %d\n", current->number_of_elements);
 	printf("i_node: %p\n", current);
@@ -209,18 +202,18 @@ void insert_into_node(node_pointer current, stdelement element, btree tree) {
 		simple_insert(current, element);
 		return;
 	}
-	split(current, (middle_element(current, element)), tree);
+	split2(current, (middle_element(current, element)), tree_pointer);
 }
 
 
-bool insert_element(stdelement element, btree tree){
+bool insert_element(stdelement element, btree *tree_pointer){
 	printf("insert_element\n");
-	node_pointer current_node = tree->root;
+	node_pointer current_node = (*tree_pointer)->root;
 
 	bool success = !findkey(element, &current_node);
 	if(success) {
-		if (!empty(tree->root)){
-			insert_into_node(current_node, element, tree);
+		if (!empty((*tree_pointer)->root)){
+			insert_into_node(current_node, element, tree_pointer);
 		}
 		else {
 			node_pointer node1 = malloc(sizeof(struct node));
@@ -228,7 +221,7 @@ bool insert_element(stdelement element, btree tree){
 			node1->number_of_elements = 1;
 			node1->number_of_children = 0;
 			node1->elements[0] = element;
-			tree->root = node1;
+			(*tree_pointer)->root = node1;
 		}
 	}
 	return success;
@@ -293,18 +286,18 @@ bool insert_element(stdelement element, btree tree){
 int main(void){
 	int ret;
 
-	// struct node node2;
-	// node2.parent = NULL;
-	// node2.number_of_elements = 2;
-	// node2.elements[0] = 1;
-	// node2.elements[1] = 2;
-	// node2.elements[2] = NULL;
-	// node2.elements[3] = NULL;
-	// node2.children[0] = NULL;
-	// node2.children[1] = NULL;
-	// node2.children[2] = NULL;
-	// node2.children[3] = NULL;
-	// node2.children[4] = NULL;
+	struct node node2;
+	node2.parent = NULL;
+	node2.number_of_elements = 2;
+	node2.elements[0] = 1;
+	node2.elements[1] = 2;
+	node2.elements[2] = NULL;
+	node2.elements[3] = NULL;
+	node2.children[0] = NULL;
+	node2.children[1] = NULL;
+	node2.children[2] = NULL;
+	node2.children[3] = NULL;
+	node2.children[4] = NULL;
 
 	// struct node node3;
 	// node3.parent = NULL;
@@ -334,19 +327,19 @@ int main(void){
 
 	struct node node1;
 	node1.parent = NULL;
-	node1.number_of_elements = 0;
-	node1.number_of_children = 0;
-	node1.elements[0] = NULL;
-	node1.elements[1] = NULL;
-	node1.elements[2] = NULL;
-	node1.elements[3] = NULL;
-	node1.children[0] = NULL; //&node2;
+	node1.number_of_elements = 4;
+	node1.number_of_children = 1;
+	node1.elements[0] = 5;
+	node1.elements[1] = 6;
+	node1.elements[2] = 7;
+	node1.elements[3] = 8;
+	node1.children[0] = &node2; //&node2;
 	node1.children[1] = NULL;
 	node1.children[2] = NULL; //&node3;
 	node1.children[3] = NULL;
 	node1.children[4] = NULL; //&node4;
 
-	// node2.parent = &node1;
+	node2.parent = &node1;
 	// node3.parent = &node1;
 	// node4.parent = &node1;
 
@@ -385,10 +378,13 @@ int main(void){
 	//insert_element(elem0, tree);
 	//insert_element(elem1, tree);
 
-	simple_insert(np, 30);
-	simple_insert(np, 38);
-	simple_insert(np, 42);
-	simple_insert(np, 10);
+	// printf("middle: %i", middle_element(np, 45));
+
+	// insert_element(30,tree);
+	// insert_element(38,tree);
+	// insert_element(42,tree);
+	// simple_insert(np,10);
+//	insert_element(10,tree);
 
 	printf("done");
 
