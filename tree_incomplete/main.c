@@ -387,63 +387,163 @@ bool insert_element(stdelement element, btree *tree_pointer){
 	return success;
 }
 
+int get_pos_in_parent(node_pointer node){
+	if(node->parent == NULL){
+		return -1;
+	}
+	int index;
+	for(int i = 0; i < node->parent->number_of_children;i++){
+		if(node == node->parent->children[i]){
+			index = i;
+		}
+	}
+	return index;
+}
+
+void node_pick_left(int position, node_pointer node){
+
+	stdelement parent_elem = node->parent->elements[position - 1];
+	node_pointer left = node->parent->children[position - 1];
+	stdelement last_in_left = left->elements[left->number_of_elements - 1];
+	node->elements[node->number_of_elements] = node->parent->elements[position - 1];
+	left->elements[left->number_of_elements - 1] = NULL;
+	left->number_of_elements--;
+	node->parent->elements[position - 1] = last_in_left;
+	node->elements[node->number_of_elements] = node->elements[node->number_of_elements -1];
+	node->elements[node->number_of_elements -1] = parent_elem;
+	node->number_of_elements++;
+}
+
+void node_pick_right(int position, node_pointer node){
+
+	stdelement parent_elem = node->parent->elements[position];
+	node_pointer right = node->parent->children[position +1];
+	stdelement first_in_right = right->elements[0];
+	node->elements[node->number_of_elements] = node->parent->elements[position];
+	for(int i = 0; i < ((right->number_of_elements)-1) ;i++){
+		right->elements[i] = right->elements[i+1];
+		right->elements[i+1] = NULL;
+	}
+	right->number_of_elements--;
+	node->parent->elements[position] = first_in_right;
+	node->elements[node->number_of_elements] = parent_elem;
+	node->number_of_elements++;
+}
+
+void node_last(int position, node_pointer node, btree tree_pointer){
+	stdelement parent_elem = node->parent->elements[position-1];
+	printf("\n last child");
+	node->parent->elements[position -1] = node->elements[0];
+	node->parent->children[position] = NULL;
+	insert_element(parent_elem, &tree_pointer);
+}
+
+void merge_left(node_pointer node, int position){
+
+	node_pointer pp = node->parent;
+	node_pointer right = pp->children[position + 1];
+
+	simple_insert(right, node->elements[0]);
+	simple_insert(right, pp->elements[position]);
+
+	debug_node(node);
+	//pp elements löschen und aufrücken
+	for(int i = 0; i < ((pp->number_of_elements) ); i++){
+		printf("\n pos i before insertion: %d\n", pp->elements[i]);
+		printf("\n pos i nach insertion: %d\n", pp->elements[i]);
+		pp->elements[i] = pp->elements[i+1];
+		printf("\n pos i nach insertion: %d\n", pp->elements[i]);
+		pp->elements[i+1] = NULL;
+	}
+	pp->number_of_elements--;
+
+	
+	//node löschen und children aufrücken
+	for(int i = 0; i < ((pp->number_of_children) ); i++){
+		pp->children[i] = pp->children[i+1];
+		pp->children[i+1] = NULL;
+	}
+	pp->number_of_children--;
+
+	debug_node(pp);
+
+}
+
+void merge_right(){
+
+}
 
 
+void node_too_small(node_pointer node, btree tree_pointer){
+	printf("\n elements smaller\n");
+	int position = get_pos_in_parent(node);
 
-// void delete_leaf(node_pointer node, stdelement element){
-// 	for(int i = 0; i < node->number_of_elements; i++){
-// 		if(node->elements[i] == element){
-// 			node->elements[i] = NULL;
-// 			node->number_of_elements --;
-// 		}
-// 	if(node->number_of_elements < 2){
-// 		node_pointer parent_node = node->parent; // um herauszufinden ob der rechte oder linke Knoten mehr als d Elemente hat müssen wir erstmal die Position unseres node in dem childrenarray finden
-// 		node_pointer left_node;
-// 		node_pointer right_node;
-// 		int dividing_element;
+	node_pointer parent = node->parent;
 
-// 		for(int i = 0; i < parent_node->number_of_children; i++){
-// 			if(parent_node->children[i] == node){
-// 				dividing_element = i;
-// 				left_node = parent_node->children[i - 1];
-// 				right_node = parent_node->children[i + 1];
-// 			}
-// 		}
-// 		// nun kommt das checken ob left_node oder right_node mehr als d elemente hat. Annahme d=2
-// 		if(left_node->number_of_elements > 2){
-// 			insert_into_node(node, left_node->elements[left_node->number_of_elements -1]);
-// 			left_node->elements[left_node->number_of_elements -1] = NULL;
-// 			left_node->number_of_elements --; // das letzte Element vom linken Knoten wurde node beigefügt
-// 		}
-// 		else if (right_node->number_of_elements > 2){
-// 			insert_into_node(node, right_node->elements[right_node->number_of_elements -1]);
-// 			right_node->elements[right_node->number_of_elements -1] = NULL;
-// 			right_node->number_of_elements --; // das letzte Element vom rechten Knoten wurde node beigefügt
-// 		}
-// 		// weder left noch right hat mehr als d elemente
-// 		else{
-// 			for(int i = 0; i < node->number_of_elements; i++){
-// 				insert_into_node(right_node, node->elements[i]); // ich habe mich entschieden in diesem Fall den Knoten immer mit dem rechten zu verschmelzen
-// 				node->elements[i] = NULL;
-// 				node->number_of_elements --;
-// 			}
-// 			insert_into_node(right_node, dividing_element); // "übernimm das trennende Element s des Vaters v in diesen Knoten"
-// 			//TODO: node->parent[dividing_element] = NULL; // leeren Knoten abgehängt
-// 			delete_leaf(parent_node, dividing_element);
-// 		}
-// 	}
-// 	}
-// }
+	// mittig oder rechts außen
+	if(position > 0){
+		if(parent->children[position - 1]->number_of_elements > ORDER){	
+			node_pick_left(position, node);
+			return;
+		}
+	}
 
-// void delete (node_pointer node, stdelement element){
-// 	if(node->number_of_children == 0){
-// 		delete_leaf(node, element);
-// 	}
-// 	else {
-// 		//element =
-// 		//delete_leaf();
-// 	}
-// }
+	// mittig oder links außen
+	if (position < MAXNODE){
+		if(parent->children[position + 1]->number_of_elements > ORDER){
+			node_pick_right(position, node);
+			return;
+		} 	
+
+	}
+	else if (position >  0){
+
+	}
+	else {}
+		merge_left(node, position);
+		// merge mit rechts
+
+}
+
+void delete_leaf(node_pointer node, stdelement element, btree tree_pointer){
+	printf("\ndelete leaf\n");
+	// lösche das Element aus dem Knoten bzw. setze es auf NULL und dekrementiere number_of_elements
+	for(int i = 0; i < node->number_of_elements; i++){
+		if(node->elements[i] == element){
+		node->elements[i] = NULL;
+		//schiebe die restlichen Elemente eins nach links
+		for(int k = i; k < ((node->number_of_elements) -1); k++){
+			node->elements[k] = node->elements[k+1];
+			node->elements[k+1] = NULL;
+		}
+		node->number_of_elements--; //muss nach dem aufschieben passieren, da sonst das letzte Element durch number_of_elements nicht angezeigt wird
+		}
+	}
+
+	//Elemente in einem Knoten dürfen nie < 2 sein
+	if(node->number_of_elements < 2){
+		node_too_small(node, tree_pointer);
+	}
+}
+
+
+void delete(node_pointer node, stdelement element, btree *tree_pointer){
+	printf("\ndelete\n");
+	debug_node(node);
+	if (findkey(element, &node) == true){ //falls das zu löschende Element und der dazugehörige Knoten gefunden wurde
+
+		if(node->number_of_children == 0){ //node wurde in findkey auf den richtigen Knoten gesetzt, Abfrage node = blatt?
+			printf("\nEntferne Element aus Blattknoten\n");
+			debug_node(node);
+			delete_leaf(node, element, *tree_pointer);
+		}
+		else {
+			printf("\nEntferne Element aus Elternknoten\n");
+			// TODO: was passiert im Fall er hat children?
+		}
+	}
+}
+
 
 int main(void){
 	int ret;
@@ -523,10 +623,18 @@ int main(void){
 	insert_element(elem2, &tree);
 	insert_element(56, &tree);
 	insert_element(57, &tree);
-	insert_element(58, &tree);
+	// insert_element(58, &tree);
+	// insert_element(46,&tree);
+	// insert_element(47,&tree);
+	
 	debug_tree(tree);
 
-	printf("done");
+	printf("\ndone\n");
+
+	delete(tree->root, 62, &tree);
+	//delete(tree->root, 60, &tree);
+	delete(tree->root, 45, &tree);
+	delete(tree->root, 43, &tree);
 
 
 	int depth = get_btree_depth(tree);
