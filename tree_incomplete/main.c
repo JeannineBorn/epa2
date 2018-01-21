@@ -467,7 +467,7 @@ void merge_into_left(node_pointer node, int position){
 	node_pointer left = pp->children[position - 1];
 
 	simple_insert(left, node->elements[0]);
-	simple_insert(left, pp->elements[position]);
+	simple_insert(left, pp->elements[position - 1]);
 
 	debug_node(node);
 	//pp elements löschen und aufrücken
@@ -505,7 +505,7 @@ void node_too_small(node_pointer node, btree tree_pointer){
 	}
 
 	// mittig oder links außen
-	if (position < MAXNODE){
+	if (position < node->parent->number_of_children - 1){
 		if(parent->children[position + 1]->number_of_elements > ORDER){
 			node_pick_right(position, node);
 			return;
@@ -560,6 +560,7 @@ void delete(node_pointer node, stdelement element, btree *tree_pointer){
 		}
 		else {
 			printf("\nEntferne Element aus Elternknoten\n");
+			//delete_leaf(node, element, *tree_pointer);
 			// TODO: was passiert im Fall er hat children?
 		}
 	}
@@ -653,7 +654,8 @@ int main(void){
 	printf("\ndone\n");
 
 	delete(tree->root, 62, &tree);
-	//delete(tree->root, 60, &tree);
+	delete(tree->root, 75, &tree);
+	//delete(tree->root, 50, &tree);
 
 
 	int depth = get_btree_depth(tree);
