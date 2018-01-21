@@ -528,10 +528,12 @@ void node_too_small(node_pointer node, btree tree_pointer){
 
 void delete_leaf(node_pointer node, stdelement element, btree tree_pointer){
 	printf("\ndelete leaf\n");
+	int pos;
 	// lösche das Element aus dem Knoten bzw. setze es auf NULL und dekrementiere number_of_elements
 	for(int i = 0; i < node->number_of_elements; i++){
 		if(node->elements[i] == element){
 		node->elements[i] = NULL;
+		pos = i;
 		//schiebe die restlichen Elemente eins nach links
 		for(int k = i; k < ((node->number_of_elements) -1); k++){
 			node->elements[k] = node->elements[k+1];
@@ -539,6 +541,19 @@ void delete_leaf(node_pointer node, stdelement element, btree tree_pointer){
 		}
 		node->number_of_elements--; //muss nach dem aufschieben passieren, da sonst das letzte Element durch number_of_elements nicht angezeigt wird
 		}
+	}
+
+	//Abfrage falls node kein Blattknoten ist
+	if(node->number_of_children != 0){
+
+
+		// ich ziehe das größte Elem aus meine Kind an position hoch
+		stdelement child_elem = node->children[pos]->elements[node->children[pos]->number_of_elements - 1];
+		simple_insert(node, child_elem);
+		// muss Kindknoten nach dem hochziehen gemerged werden?
+		delete_leaf(node->children[pos],child_elem, tree_pointer);
+		return;
+
 	}
 
 	//Elemente in einem Knoten dürfen nie < 2 sein
@@ -560,8 +575,13 @@ void delete(node_pointer node, stdelement element, btree *tree_pointer){
 		}
 		else {
 			printf("\nEntferne Element aus Elternknoten\n");
-			//delete_leaf(node, element, *tree_pointer);
-			// TODO: was passiert im Fall er hat children?
+
+			if(node->number_of_elements > ORDER){
+				delete_leaf(node, element, *tree_pointer);
+
+			}
+			
+
 		}
 	}
 }
@@ -655,7 +675,9 @@ int main(void){
 
 	delete(tree->root, 62, &tree);
 	delete(tree->root, 75, &tree);
-	//delete(tree->root, 50, &tree);
+	delete(tree->root, 60, &tree);
+	delete(tree->root, 57, &tree);
+
 
 
 	int depth = get_btree_depth(tree);
