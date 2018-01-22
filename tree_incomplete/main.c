@@ -278,14 +278,16 @@ void leaf_split(node_pointer node, stdelement element, btree *tree_pointer) {
 		for(int i = elem_insert_pos; i < middle_idx; i++) {
 			left->elements[i + 1] = node->elements[i];
 		}
-		
+
 		left->number_of_elements = middle_idx + 1;
 		int count_elements_right = MAXNODE - middle_idx - 1;
 
 		for(int i = 0; i < count_elements_right; i++) {
 			node->elements[i] = node->elements[middle_idx + i + 1];
+			node->elements[middle_idx + i + 1] = NULL; // hier hat jeannine ganz frech rumgeschraubt
+			node->number_of_elements--;
 		}
-		node->number_of_elements = count_elements_right + 1;
+		//node->number_of_elements = count_elements_right + 1; // JEANNINE war hier :PP
 
 	} else {
 		for(int i = 0; i < middle_idx; i++) {
@@ -318,8 +320,9 @@ bool findkey(stdelement element, node_pointer *current_node){
 	printf("elems-> %d\n", (*current_node)->elements[0]);
 	node_pointer target = *current_node;
 	int size_array = target->number_of_elements;
-	printf("array size: %d\n", size_array);
+	printf("\n array size: %d\n", size_array);
 	for(int i = 0; i < size_array; i++) {
+		
 		if(element == target->elements[i]) {
 			printf("found_n: %p\n", *current_node);
 			return true;
@@ -342,6 +345,12 @@ bool findkey(stdelement element, node_pointer *current_node){
 		*current_node = target->children[MAXNODE];
 		return findkey(element, current_node);
 	}
+	if(target->number_of_children != 0){
+		*current_node = target->children[size_array];
+		return findkey(element, current_node);
+
+	}
+
 	return false;
 }
 
@@ -438,31 +447,39 @@ void node_last(int position, node_pointer node, btree tree_pointer){
 	insert_element(parent_elem, &tree_pointer);
 }
 
-void merge_into_right(node_pointer node, int position){
-
+void merge_into_right(node_pointer node, int position, btree tree_pointer){
+	printf("\n SPONGEBOB SCHWAMMKOPF \n");
 	node_pointer pp = node->parent;
 	node_pointer right = pp->children[position + 1];
 
 	simple_insert(right, node->elements[0]);
+	debug_node(right);
 	simple_insert(right, pp->elements[position]);
+	debug_node(right);
 
 	debug_node(node);
 	//pp elements löschen und aufrücken
-	for(int i = position - 1; i < ((pp->number_of_elements) ); i++){
+	for(int i = position; i < pp->number_of_elements; i++){
 		pp->elements[i] = pp->elements[i+1];
 		pp->elements[i+1] = NULL;
 	}
 	pp->number_of_elements--;
 	
 	//node löschen und children aufrücken
-	for(int i = position; i < ((pp->number_of_children) ); i++){
+	for(int i = position; i < pp->number_of_children; i++){
 		pp->children[i] = pp->children[i+1];
 		pp->children[i+1] = NULL;
 	}
 	pp->number_of_children--;
+
+	if(pp->number_of_elements == 0){
+		tree_pointer->root = right;
+		right->parent = NULL;
+	}
+
 }
 
-void merge_into_left(node_pointer node, int position){
+void merge_into_left(node_pointer node, int position, btree tree_pointer){
 	node_pointer pp = node->parent;
 	node_pointer left = pp->children[position - 1];
 
@@ -476,13 +493,18 @@ void merge_into_left(node_pointer node, int position){
 		pp->elements[i+1] = NULL;
 	}
 	pp->number_of_elements--;
-	
+
 	//node löschen und children aufrücken
 	for(int i = position; i < ((pp->number_of_children) ); i++){
 		pp->children[i] = pp->children[i+1];
 		pp->children[i+1] = NULL;
 	}
 	pp->number_of_children--;
+
+	if(pp->number_of_elements == 0){
+		tree_pointer->root = left;
+		left->parent = NULL;
+	}	
 }
 
 
@@ -516,12 +538,14 @@ void node_too_small(node_pointer node, btree tree_pointer){
 	printf("\nposizion: %d", position);
 	if (position > 0){
 		printf("\n merge into left \n");
-		merge_into_left(node, position);
+		merge_into_left(node, position, tree_pointer);
 	}
 	else {
-		//merge_into_right(node, position);
+
+		printf("\n ooooooooooooooooooooooooooooooooooh wer wohnt in ner annanas \n");
 		printf("\n merge into right \n");
 		printf("\n going inn \n");
+		merge_into_right(node, position, tree_pointer);
 	}
 
 }
@@ -552,14 +576,13 @@ void delete_leaf(node_pointer node, stdelement element, btree tree_pointer){
 		simple_insert(node, child_elem);
 		// muss Kindknoten nach dem hochziehen gemerged werden?
 		delete_leaf(node->children[pos],child_elem, tree_pointer);
-		return;
-
 	}
 
 	//Elemente in einem Knoten dürfen nie < 2 sein
 	if(node->number_of_elements < 2){
 		node_too_small(node, tree_pointer);
 	}
+
 }
 
 
@@ -576,10 +599,8 @@ void delete(node_pointer node, stdelement element, btree *tree_pointer){
 		else {
 			printf("\nEntferne Element aus Elternknoten\n");
 
-			if(node->number_of_elements > ORDER){
-				delete_leaf(node, element, *tree_pointer);
+			delete_leaf(node, element, *tree_pointer);
 
-			}
 			
 
 		}
@@ -590,94 +611,58 @@ void delete(node_pointer node, stdelement element, btree *tree_pointer){
 int main(void){
 	int ret;
 
-	struct node node2;
-	node2.parent = NULL;
-	node2.number_of_elements = 2;
-	node2.number_of_children = 0;
-	node2.elements[0] = 43;
-	node2.elements[1] = 45;
-	node2.elements[2] = NULL;
-	node2.elements[3] = NULL;
-	node2.children[0] = NULL;
-	node2.children[1] = NULL;
-	node2.children[2] = NULL;
-	node2.children[3] = NULL;
-	node2.children[4] = NULL;
-
-	struct node node3;
-	node3.parent = NULL;
-	node3.number_of_elements = 2;
-	node3.number_of_children = 0;
-	node3.elements[0] = 55;
-	node3.elements[1] = 60;
-	node3.elements[2] = NULL;
-	node3.elements[3] = NULL;
-	node3.children[0] = NULL;
-	node3.children[1] = NULL;
-	node3.children[2] = NULL;
-	node3.children[3] = NULL;
-	node3.children[4] = NULL;
-
-	struct node node4;
-	node4.parent = NULL;
-	node4.number_of_elements = 2;
-	node4.number_of_children = 0;
-	node4.elements[0] = 70;
-	node4.elements[1] = 75;
-	node4.elements[2] = NULL;
-	node4.elements[3] = NULL;
-	node4.children[0] = NULL;
-	node4.children[1] = NULL;
-	node4.children[2] = NULL;
-	node4.children[3] = NULL;
-	node4.children[4] = NULL;
-
 	struct node node1;
 	node1.parent = NULL;
-	node1.number_of_elements = 3;
-	node1.number_of_children = 3;
-	node1.elements[0] = 50;
-	node1.elements[1] = 65;
-	node1.elements[2] = 80;
+	node1.number_of_elements = 0;
+	node1.number_of_children = 0;
+	node1.elements[0] = NULL;
+	node1.elements[1] = NULL;
+	node1.elements[2] = NULL;
 	node1.elements[3] = NULL;
-	node1.children[0] = &node2; 
-	node1.children[1] = &node3;
-	node1.children[2] = &node4; 
+	node1.children[0] = NULL; 
+	node1.children[1] = NULL;
+	node1.children[2] = NULL; 
 	node1.children[3] = NULL;
 	node1.children[4] = NULL; 
-
-	node2.parent = &node1;
-	node3.parent = &node1;
-	node4.parent = &node1;
 
 	btree tree = create_btree();
 	tree->root = &node1;
 
-	stdelement elem0 = 61;
-	stdelement elem1 = 62;
-	stdelement elem2 = 63;
-	stdelement elem3 = 64;
 
-	node_pointer np = &node1;
+	insert_element(30, &tree);
+	insert_element(38, &tree);
+	insert_element(42,&tree);
+	insert_element(10,&tree);
+	insert_element(20,&tree);
+	insert_element(25,&tree);
+	insert_element(32,&tree);
+	insert_element(34,&tree);
+	insert_element(40,&tree);
+	insert_element(41,&tree);	
+	insert_element(44,&tree);
+	insert_element(50,&tree);
+	insert_element(56,&tree);
 
-	insert_element(elem0, &tree);
-	insert_element(elem1, &tree);
-	insert_element(elem2, &tree);
-	insert_element(56, &tree);
-	insert_element(57, &tree);
-	// insert_element(58, &tree);
-	// insert_element(46,&tree);
-	// insert_element(47,&tree);
-	
+	delete(tree->root, 30, &tree);
+	delete(tree->root, 38, &tree);
+	delete(tree->root, 42,&tree);
+	delete(tree->root, 10,&tree);
+	delete(tree->root, 20,&tree);
+	delete(tree->root, 25,&tree);
+	delete(tree->root, 32,&tree);
+	delete(tree->root, 34,&tree);
+	delete(tree->root, 40,&tree);
+	delete(tree->root, 41,&tree);	
+	delete(tree->root, 44,&tree);
+	delete(tree->root, 50,&tree);
+	//delete(tree->root, 56,&tree);	
+
+	printf("\n debugging tree: \n");
 	debug_tree(tree);
 
 	printf("\ndone\n");
 
-	delete(tree->root, 62, &tree);
-	delete(tree->root, 75, &tree);
-	delete(tree->root, 60, &tree);
-	delete(tree->root, 57, &tree);
-
+	//delete(tree->root, 57,&tree);
 
 
 	int depth = get_btree_depth(tree);
