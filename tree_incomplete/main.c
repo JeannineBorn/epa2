@@ -566,6 +566,12 @@ void delete_leaf(node_pointer node, stdelement element, btree tree_pointer){
 		node->number_of_elements--; //muss nach dem aufschieben passieren, da sonst das letzte Element durch number_of_elements nicht angezeigt wird
 		}
 	}
+	printf("\ndeleting root elements\n");
+	if(node == tree_pointer->root && node->number_of_children == 0) {
+		printf("\nyodel\n");
+		return;
+	}
+	printf("\nsomething went wrong\n");
 
 	//Abfrage falls node kein Blattknoten ist
 	if(node->number_of_children != 0){
@@ -598,11 +604,7 @@ void delete(node_pointer node, stdelement element, btree *tree_pointer){
 		}
 		else {
 			printf("\nEntferne Element aus Elternknoten\n");
-
 			delete_leaf(node, element, *tree_pointer);
-
-			
-
 		}
 	}
 }
@@ -655,7 +657,7 @@ int main(void){
 	delete(tree->root, 41,&tree);	
 	delete(tree->root, 44,&tree);
 	delete(tree->root, 50,&tree);
-	//delete(tree->root, 56,&tree);	
+	delete(tree->root, 56,&tree);	
 
 	printf("\n debugging tree: \n");
 	debug_tree(tree);
